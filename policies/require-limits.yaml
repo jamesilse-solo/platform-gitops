@@ -11,12 +11,16 @@ spec:
         resources:
           kinds:
             - Deployment
+            - StatefulSet
+            - DaemonSet
+            - Job
       exclude:
         resources:
           namespaces:
             - kube-system
             - default
             - kyverno
+            - istio-system
       validate:
         message: "CPU and Memory limits are required"
         pattern:
