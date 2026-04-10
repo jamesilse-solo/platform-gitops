@@ -6,19 +6,19 @@ spec:
   validationFailureAction: enforce
   background: true
   rules:
-    - name: check-limits
+    - name: check-container-limits
       match:
-        resources:
-          kinds:
-            - Deployment
-            - StatefulSet
-            - DaemonSet
-            - Job
+        any:
+        - resources:
+            kinds:
+              - Deployment
+              - StatefulSet
+              - DaemonSet
+              - Job
       exclude:
         resources:
           namespaces:
             - kube-system
-            - default
             - kyverno
             - istio-system
       validate:
@@ -31,13 +31,8 @@ spec:
               - key: "{{ element.name }}"
                 operator: NotEquals
                 value: istio-proxy
-        pattern:
-          spec:
-            template:
-              spec:
-                containers:
-                  - resources:
-                      limits:
-                        cpu: "?*"
-                        memory: "?*"
-
+            pattern:
+              resources:
+                limits:
+                  cpu: "?*"
+                  memory: "?*"
