@@ -30,7 +30,9 @@ spec:
               all:
               - key: "{{ element.name }}"
                 operator: NotEquals
-                value: istio-proxy
+                value:
+                  - istio-proxy
+                  - istio-init
             pattern:
               resources:
                 limits:
