@@ -6,11 +6,11 @@ metadata:
 spec:
   project: platform-project
   source:
-    repoURL: https://github.com
+    repoURL:https://github.com/maheshnaganna1994-lang/platform-gitops.git
     path: policies
     targetRevision: main
   destination:
-    server: https://default.svc
+    server: https://kubernetes.default.svc
     namespace: default
   syncPolicy:
     automated:
