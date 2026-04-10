@@ -1,23 +1,21 @@
-apiVersion: argoproj.io/v1alpha1
+apiVersion: argoproj.io/v1alpha1  # <--- Use '1', not 'l'
 kind: Application
 metadata:
   name: kyverno
   namespace: argocd
 spec:
   project: platform-project
-
   source:
     repoURL: https://kyverno.github.io/kyverno/
     chart: kyverno
     targetRevision: 3.0.0
-
   destination:
     server: https://kubernetes.default.svc
     namespace: kyverno
-
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+    - CreateNamespace=true
+    - ServerSideApply=true  # <--- THIS FIXES THE "METADATA TOO LONG" ERROR
