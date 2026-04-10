@@ -4,12 +4,19 @@ metadata:
   name: require-resource-limits
 spec:
   validationFailureAction: enforce
+  background: true
   rules:
     - name: check-limits
       match:
         resources:
           kinds:
-            - Deployment   # 👈 ADD THIS
+            - Deployment
+      exclude:
+        resources:
+          namespaces:
+            - kube-system
+            - argocd
+            - kyverno
       validate:
         message: "CPU and Memory limits are required"
         pattern:
