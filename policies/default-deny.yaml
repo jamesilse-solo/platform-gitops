@@ -1,9 +1,18 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: allow-all-in-namespace
+  namespace: default
 spec:
-  podSelector: {}
+  podSelector: {} # Selects all pods
   policyTypes:
-    - Ingress
-    - Egress
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: {} # Allows ingress from all pods in this namespace
+  egress:
+  - to:
+    - podSelector: {} # Allows egress to all pods in this namespace
+  # Note: You still need a separate rule for DNS (kube-system) 
+  # and Internet if you want to reach Google/External APIs.
