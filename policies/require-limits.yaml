@@ -15,7 +15,7 @@ spec:
         resources:
           namespaces:
             - kube-system
-            - argocd
+            - default
             - kyverno
       validate:
         message: "CPU and Memory limits are required"
