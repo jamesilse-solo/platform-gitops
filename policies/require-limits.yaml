@@ -22,7 +22,15 @@ spec:
             - kyverno
             - istio-system
       validate:
-        message: "CPU and Memory limits are required"
+        message: "CPU and memory limits are required for all containers except Istio sidecars."
+        foreach:
+          - list: "request.object.spec.template.spec.containers"
+            # This skips the check if the container is the Istio sidecar
+            preconditions:
+              all:
+              - key: "{{ element.name }}"
+                operator: NotEquals
+                value: istio-proxy
         pattern:
           spec:
             template:
@@ -32,3 +40,4 @@ spec:
                       limits:
                         cpu: "?*"
                         memory: "?*"
+
