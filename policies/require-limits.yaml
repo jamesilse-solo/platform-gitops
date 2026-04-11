@@ -21,7 +21,7 @@ spec:
             - kube-system
             - kyverno
             - istio-system
-            - agrocd # <--- Added this to allow Argo CD to restart freely
+            - argocd # <--- Added this to allow Argo CD to restart freely
       validate:
         message: "CPU and memory limits are required for all containers except Istio sidecars."
         foreach:
