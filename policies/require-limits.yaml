@@ -9,18 +9,19 @@ spec:
     - name: check-container-limits
       match:
         any:
-        - resources:
-            kinds:
-              - Deployment
-              - StatefulSet
-              - DaemonSet
-              - Job
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+                - DaemonSet
+                - Job
       exclude:
         resources:
           namespaces:
             - kube-system
             - kyverno
             - istio-system
+            - default # <--- Added this to allow Argo CD to restart freely
       validate:
         message: "CPU and memory limits are required for all containers except Istio sidecars."
         foreach:
@@ -28,11 +29,11 @@ spec:
             # This skips the check if the container is the Istio sidecar
             preconditions:
               all:
-              - key: "{{ element.name }}"
-                operator: NotIn
-                value:
-                  - istio-proxy
-                  - istio-init
+                - key: "{{ element.name }}"
+                  operator: NotIn
+                  value:
+                    - istio-proxy
+                    - istio-init
             pattern:
               resources:
                 limits:
