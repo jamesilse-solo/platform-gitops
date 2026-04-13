@@ -3,17 +3,17 @@ kind: VirtualService
 metadata:
   name: nginx-vs
   namespace: default
-
 spec:
   hosts:
-    - "*"
-
+  - "*"
   gateways:
-    - nginx-gateway
-
+  - nginx-gateway
   http:
-    - route:
-        - destination:
-            host: nginx-app-nginx-chart
-            port:
-              number: 80
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: nginx-app-nginx-chart
+        port:
+          number: 80

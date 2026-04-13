@@ -3,15 +3,13 @@ kind: Gateway
 metadata:
   name: nginx-gateway
   namespace: default
-
 spec:
   selector:
     istio: ingressgateway
-
   servers:
-    - port:
-        number: 80
-        name: http
-        protocol: HTTP
-      hosts:
-        - "*"
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
