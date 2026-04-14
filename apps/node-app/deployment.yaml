@@ -14,17 +14,18 @@ spec:
         app: node-app
     spec:
       containers:
-      - name: node-app
-        image: hashicorp/http-echo
-        args:
-          - "-text=Hello from DevSecOps Platform 🚀"
-        ports:
-          - containerPort: 5678
+        - name: node-app
+          image: hashicorp/http-echo
+          args:
+            - "-text=Hello from DevSecOps Platform 🚀"
+ 
+          ports:
+            - containerPort: 5678
 
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "200m"
-            memory: "256Mi
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi
