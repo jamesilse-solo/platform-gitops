@@ -13,6 +13,11 @@ spec:
     - match:
         - uri:
             prefix: /node
+        fault:
+          delay:
+            percentage:
+              value: 50
+            fixedDelay: 5s
       route:
         - destination:
             host: node-app.default.svc.cluster.local

@@ -5,6 +5,15 @@ metadata:
   namespace: default
 spec:
   host: node-app
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutive5xxErrors: 1
+      interval: 5s
+      baseEjectionTime: 30s
   subsets:
     - name: v1
       labels:
