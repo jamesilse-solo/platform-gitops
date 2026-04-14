@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: node-app-v1
+  name: node-app-v2
   namespace: default
 spec:
   replicas: 2
@@ -19,7 +19,7 @@ spec:
         - name: node-app
           image: hashicorp/http-echo
           args:
-            - "-text=Hello from DevSecOps Platform 🚀"
+            - "-text=Hello from DevSecOps Platform V2 🚀🔥"
           ports:
             - containerPort: 5678
           resources:
