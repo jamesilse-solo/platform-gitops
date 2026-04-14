@@ -7,7 +7,7 @@ spec:
   hosts:
     - "*"
   gateways:
-    - nginx-gateway
+    - default/nginx-gateway
   http:
     - match:
         - uri:
