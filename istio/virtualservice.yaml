@@ -6,32 +6,41 @@ metadata:
 spec:
   hosts:
     - "*"
+
   gateways:
     - default/nginx-gateway
+
   http:
-    - match:
-        - uri:
-            prefix: /node
-      fault:
-        delay:
-          percentage:
-            value: 50
-          fixedDelay: 5s
-      route:
-        - destination:
-            host: node-app.default.svc.cluster.local
-            subset: v1
-            port:
-              number: 80
-          weight: 50
-        - destination:
-            host: node-app.default.svc.cluster.local
-            subset: v2
-            port:
-              number: 80
-          weight: 50
-    - route:
-        - destination:
-            host: nginx-app-nginx-chart.default.svc.cluster.local
-            port:
-              number: 80
+
+  # 🔥 NODE APP (CANARY + DELAY TEST)
+  - match:
+      - uri:
+          prefix: /node
+    fault:
+      delay:
+        percentage:
+          value: 50
+        fixedDelay: 5s
+    route:
+      - destination:
+          host: node-app.default.svc.cluster.local
+          subset: v1
+          port:
+            number: 80
+        weight: 50
+      - destination:
+          host: node-app.default.svc.cluster.local
+          subset: v2
+          port:
+            number: 80
+        weight: 50
+
+  # 🔥 NGINX DEFAULT ROUTE
+  - match:
+      - uri:
+          prefix: /
+    route:
+      - destination:
+          host: nginx-app-nginx-chart.default.svc.cluster.local
+          port:
+            number: 80
