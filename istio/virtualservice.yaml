@@ -8,16 +8,15 @@ spec:
     - "*"
   gateways:
     - nginx-gateway
-
   http:
     - match:
         - uri:
             prefix: /node
-        fault:
-          delay:
-            percentage:
-              value: 50
-            fixedDelay: 5s
+      fault:
+        delay:
+          percentage:
+            value: 50
+          fixedDelay: 5s
       route:
         - destination:
             host: node-app.default.svc.cluster.local
@@ -25,14 +24,12 @@ spec:
             port:
               number: 80
           weight: 50
-
         - destination:
             host: node-app.default.svc.cluster.local
             subset: v2
             port:
               number: 80
           weight: 50
-
     - route:
         - destination:
             host: nginx-app-nginx-chart.default.svc.cluster.local
