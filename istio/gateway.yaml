@@ -2,9 +2,10 @@ apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: nginx-gateway
+  namespace: default   # 🔥 ADD THIS LINE
 spec:
   selector:
-    app: istio-ingressgateway   # ✅ FIXED
+    istio: ingressgateway
   servers:
   - port:
       number: 80
