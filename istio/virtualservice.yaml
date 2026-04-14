@@ -8,8 +8,11 @@ spec:
   gateways:
   - nginx-gateway
   http:
-  - route:
+  - match:
+    - uri:
+        prefix: /
+    route:
     - destination:
-        host: nginx-app-nginx-chart.default.svc.cluster.local
+        host: nginx-app-nginx-chart
         port:
           number: 80

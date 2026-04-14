@@ -4,7 +4,7 @@ metadata:
   name: nginx-dr
   namespace: default
 spec:
-  host: nginx-app-nginx-chart
+  host: nginx-app-nginx-chart.default.svc.cluster.local
   trafficPolicy:
     tls:
       mode: ISTIO_MUTUAL
