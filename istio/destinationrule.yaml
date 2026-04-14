@@ -1,10 +1,14 @@
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
-  name: nginx-dr
+  name: node-app-dr
   namespace: default
 spec:
-  host: nginx-app-nginx-chart.default.svc.cluster.local
-  trafficPolicy:
-    tls:
-      mode: ISTIO_MUTUAL
+  host: node-app
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2

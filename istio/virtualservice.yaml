@@ -19,9 +19,17 @@ spec:
 
     - match:
         - uri:
-            prefix: /
+            prefix: /node
       route:
         - destination:
-            host: nginx-app-nginx-chart.default.svc.cluster.local
+            host: node-app.default.svc.cluster.local
+            subset: v1
             port:
               number: 80
+          weight: 90
+      - destination:
+          host: node-app.default.svc.cluster.local
+          subset: v2
+          port:
+            number: 80
+        weight: 10
