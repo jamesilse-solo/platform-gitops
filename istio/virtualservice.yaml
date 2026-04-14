@@ -1,18 +1,15 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: nginx-vs
+  name: node-app-vs
 spec:
   hosts:
   - "*"
   gateways:
   - nginx-gateway
   http:
-  - match:
-    - uri:
-        prefix: /
-    route:
+  - route:
     - destination:
-        host: nginx-app-nginx-chart
+        host: node-app.default.svc.cluster.local
         port:
           number: 80
