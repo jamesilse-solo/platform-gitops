@@ -3,19 +3,17 @@ kind: AnalysisTemplate
 metadata:
   name: success-rate-check
   namespace: default
-
 spec:
   metrics:
   - name: success-rate
     interval: 30s
-    successCondition: result >= 0
-    failureLimit: 2
-
+    count: 3  # Add this! It will check 3 times (90 seconds total) then pass
+    successCondition: default(result, 1) >= 0.95
+    failureLimit: 1
     provider:
       prometheus:
-        address: http://prometheus.istio-system.svc.cluster.local:9090
-
+        address: http://cluster.local
         query: |
-          sum(rate(istio_requests_total{destination_service=~"node-app.*",response_code!~"5.*"}[1m])) 
+          sum(rate(istio_requests_total{destination_service=~"node-app.*",response_code!~"5.*"}[1m]))
           /
           sum(rate(istio_requests_total{destination_service=~"node-app.*"}[1m]))
