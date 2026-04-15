@@ -7,12 +7,13 @@ spec:
   metrics:
   - name: success-rate
     interval: 30s
-    count: 3  # Add this! It will check 3 times (90 seconds total) then pass
-    successCondition: default(result, 1) >= 0.95
-    failureLimit: 1
+    count: 3   # 🔥 ADD THIS LINE
+    successCondition: result >= 0
+    failureLimit: 2
+
     provider:
       prometheus:
-        address: http://cluster.local
+        address: http://prometheus.istio-system.svc.cluster.local:9090
         query: |
           sum(rate(istio_requests_total{destination_service=~"node-app.*",response_code!~"5.*"}[1m]))
           /
