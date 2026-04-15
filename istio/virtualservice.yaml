@@ -10,17 +10,9 @@ spec:
   - nginx-gateway
 
   http:
-
-  # 🎯 Node app traffic with CANARY + FAILURE
   - match:
     - uri:
         prefix: /node
-
-    fault:
-      delay:
-        percentage:
-          value: 20   # only affect V2 traffic approx
-        fixedDelay: 5s
 
     route:
     - destination:
@@ -28,16 +20,15 @@ spec:
         subset: v1
         port:
           number: 80
-      weight: 80
+      weight: 100
 
     - destination:
         host: node-app.default.svc.cluster.local
         subset: v2
         port:
           number: 80
-      weight: 20
+      weight: 0
 
-  # 🎯 Default route (nginx)
   - route:
     - destination:
         host: nginx-app-nginx-chart.default.svc.cluster.local
