@@ -22,6 +22,7 @@ spec:
             - kyverno
             - istio-system
             - argocd # <--- Added this to allow Argo CD to restart freely
+            - argo-rollouts
       validate:
         message: "CPU and memory limits are required for all containers except Istio sidecars."
         foreach:
