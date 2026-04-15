@@ -18,13 +18,13 @@ spec:
         subset: v1
         port:
           number: 80
-      weight: 90
+      weight: 80
     - destination:
         host: node-app.default.svc.cluster.local
         subset: v2
         port:
           number: 80
-      weight: 10
+      weight: 20
   - route:
     - destination:
         host: nginx-app-nginx-chart.default.svc.cluster.local
