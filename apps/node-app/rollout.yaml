@@ -3,14 +3,11 @@ kind: Rollout
 metadata:
   name: node-app
   namespace: default
-
 spec:
   replicas: 1
-
   selector:
     matchLabels:
       app: node-app
-
   template:
     metadata:
       labels:
@@ -20,7 +17,7 @@ spec:
       - name: node-app
         image: hashicorp/http-echo
         args:
-          - "-text=Hello from v2 🚀"
+          - "-text=Hello from v3 🚀"
         ports:
         - containerPort: 5678
         resources:
@@ -30,27 +27,27 @@ spec:
           limits:
             cpu: "50m"
             memory: "64Mi"
-
   strategy:
     canary:
       canaryService: node-app-canary
       stableService: node-app-stable
-
       trafficRouting:
         istio:
           virtualService:
             name: node-app-vs
             routes:
               - primary
-
       steps:
       - setWeight: 10
-      - pause: { duration: 30s }
-
+      - analysis:
+          templates:
+          - templateName: success-rate-check
       - setWeight: 30
-      - pause: { duration: 30s }
-
+      - analysis:
+          templates:
+          - templateName: success-rate-check
       - setWeight: 60
-      - pause: { duration: 30s }
-
+      - analysis:
+          templates:
+          - templateName: success-rate-check
       - setWeight: 100
