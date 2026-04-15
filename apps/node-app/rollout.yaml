@@ -5,7 +5,7 @@ metadata:
   namespace: default
 
 spec:
-  replicas: 3
+  replicas: 1
 
   selector:
     matchLabels:
@@ -25,11 +25,11 @@ spec:
         - containerPort: 5678
         resources:
           requests:
-            cpu: "100m"
-            memory: "128Mi"
+            cpu: "10m"
+            memory: "32Mi"
           limits:
-            cpu: "200m"
-            memory: "256Mi"
+            cpu: "50m"
+            memory: "64Mi"
 
   strategy:
     canary:
