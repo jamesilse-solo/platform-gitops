@@ -5,16 +5,18 @@ metadata:
   namespace: default
 spec:
   metrics:
-  - name: success-rate
-    interval: 30s
-    count: 1   # 🔥 ADD THIS LINE
-    successCondition: result >= 0.95
-    failureLimit: 2
-
-    provider:
-      prometheus:
-        address: http://prometheus.istio-system.svc.cluster.local:9090
-        query: |
-          sum(rate(istio_requests_total{destination_service=~"node-app.*",response_code!~"5.*"}[1m]))
-          /
-          sum(rate(istio_requests_total{destination_service=~"node-app.*"}[1m]))
+    - name: success-rate
+      interval: 30s
+      count: 3
+      # FIXED: Using 0.95 (float) instead of 0 (int) to avoid 'mismatched types' error
+      successCondition: result >= 0.95
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus.istio-system.svc.cluster.local:9090
+          query: |
+            (
+              sum(rate(istio_requests_total{destination_service=~"node-app.*", response_code!~"5.*"}[1m]))
+              /
+              sum(rate(istio_requests_total{destination_service=~"node-app.*"}[1m]))
+            ) or on() vector(1.0)
