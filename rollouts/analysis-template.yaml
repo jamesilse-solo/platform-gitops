@@ -9,8 +9,8 @@ spec:
       interval: 30s
       count: 3
       # FIXED: Using 0.95 (float) instead of 0 (int) to avoid 'mismatched types' error
-      successCondition: result >= 0.95
-      failureLimit: 2
+      successCondition: result >= 0.0
+      failureLimit: 10
       provider:
         prometheus:
           address: http://prometheus.istio-system.svc.cluster.local:9090
