@@ -7,8 +7,8 @@ spec:
   metrics:
   - name: success-rate
     interval: 30s
-    count: 3   # 🔥 ADD THIS LINE
-    successCondition: result >= 0
+    count: 1   # 🔥 ADD THIS LINE
+    successCondition: result[0] >= 0
     failureLimit: 2
 
     provider:
