@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: default
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3  # Automatically cleans up those old rollouts in ArgoCD
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        sidecar.istio.io/inject: "true" # Ensures Istio sidecar is always added
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent # Added per your request
+        ports:
+        - containerPort: 80
+        resources:  # Mandatory for your Kyverno Policy
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+          requests:
+            cpu: "50m"
+            memory: "64Mi"

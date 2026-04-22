@@ -1,0 +1,42 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+    - name: check-container-limits
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+                - StatefulSet
+                - DaemonSet
+                - Job
+      exclude:
+        resources:
+          namespaces:
+            - kube-system
+            - kyverno
+            - istio-system
+            - argocd # <--- Added this to allow Argo CD to restart freely
+            - argo-rollouts
+      validate:
+        message: "CPU and memory limits are required for all containers except Istio sidecars."
+        foreach:
+          - list: "request.object.spec.template.spec.containers"
+            # This skips the check if the container is the Istio sidecar
+            preconditions:
+              all:
+                - key: "{{ element.name }}"
+                  operator: NotIn
+                  value:
+                    - istio-proxy
+                    - istio-init
+            pattern:
+              resources:
+                limits:
+                  cpu: "?*"
+                  memory: "?*"

@@ -1,0 +1,11 @@
+apiVersion: v2
+name: nginx-chart
+description: Nginx reverse proxy Helm chart for platform-gitops
+
+type: application
+
+# Increment this version each time you make changes to the chart templates or values.
+version: 0.1.0
+
+# The version of nginx being deployed.
+appVersion: "1.25.0"
