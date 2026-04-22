@@ -1,1 +1,38 @@
+# Istio downloaded binaries
 istio-*
+
+# macOS
+.DS_Store
+
+# Secrets — never commit these
+*.secret.yaml
+*.secret.yml
+secrets/
+*-secret.yaml
+*-secrets.yaml
+
+# Kubeconfig files
+*.kubeconfig
+kubeconfig*
+.kube/
+
+# Helm
+charts/
+*.tgz
+
+# Terraform (if added later)
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temp / local overrides
+*.local.yaml
+*.local.yml
+override*.yaml
