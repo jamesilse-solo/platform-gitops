@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: node-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+    spec:
+      containers:
+      - name: node-app
+        image: hashicorp/http-echo
+        args:
+          - "-text=Hello from v4 🚀"
+        ports:
+        - containerPort: 5678
+        resources:
+          requests:
+            cpu: "10m"
+            memory: "32Mi"
+          limits:
+            cpu: "50m"
+            memory: "64Mi"
+  strategy:
+    canary:
+      canaryService: node-app-canary
+      stableService: node-app-stable
+      trafficRouting:
+        istio:
+          virtualService:
+            name: node-app-vs
+            routes:
+              - primary
+      steps:
+      - setWeight: 10
+      - analysis:
+          templates:
+          - templateName: success-rate-check
+      - setWeight: 30
+      - analysis:
+          templates:
+          - templateName: success-rate-check
+      - setWeight: 60
+      - analysis:
+          templates:
+          - templateName: success-rate-check
+      - setWeight: 100
