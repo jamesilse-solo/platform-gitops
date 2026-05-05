@@ -21,4 +21,3 @@ spec:
           sum(rate(istio_requests_total{
             destination_service_name="node-app-canary"
           }[2m]))
-          or on() vector(1)
