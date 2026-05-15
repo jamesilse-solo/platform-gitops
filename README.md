@@ -1,237 +1,190 @@
-# 🚀 Platform GitOps
+<div align="center">
 
-A production-grade GitOps platform built on **Kubernetes**, using **ArgoCD** for continuous delivery, **Istio** for service mesh, **Argo Rollouts** for progressive delivery, and **Kyverno** for policy enforcement.
+# 🚀 Platform GitOps
+### Enterprise GitOps Delivery Platform for Kubernetes
+
+<p>
+  <img src="https://img.shields.io/badge/ArgoCD-GitOps-EF7B4D?logo=argo" />
+  <img src="https://img.shields.io/badge/Kubernetes-1.27+-326CE5?logo=kubernetes" />
+  <img src="https://img.shields.io/badge/Istio-Service%20Mesh-466BB0" />
+  <img src="https://img.shields.io/badge/Argo%20Rollouts-Canary-FF6F00" />
+  <img src="https://img.shields.io/badge/Kyverno-Policy%20as%20Code-2B5FAB" />
+  <img src="https://img.shields.io/badge/Prometheus-Observability-E6522C?logo=prometheus" />
+</p>
+
+**Git as the Source of Truth for Secure, Progressive Kubernetes Delivery**
+
+</div>
 
 ---
 
-## 📐 Architecture Overview
+## 🎯 Overview
 
-```
-                          ┌─────────────────────────────────────────┐
-                          │              ArgoCD                      │
-                          │   (Watches this repo, syncs cluster)     │
-                          └────────────┬────────────────────────────┘
-                                       │
-            ┌──────────────────────────┼──────────────────────────┐
-            │                          │                          │
-     ┌──────▼──────┐          ┌────────▼──────┐         ┌────────▼──────┐
-     │  Istio      │          │  Kyverno      │         │  Applications │
-     │  (Service   │          │  (Policies)   │         │  (nginx,      │
-     │   Mesh)     │          │               │         │   node-app)   │
-     └─────────────┘          └───────────────┘         └───────────────┘
-```
+This repository implements a production-grade GitOps platform built on Kubernetes.
 
-Traffic flows via the **Istio Ingress Gateway → nginx (reverse proxy) → node-app**, with mTLS enforced across the mesh and Kyverno validating all workloads at admission time.
+It combines:
+
+- 🔄 ArgoCD for continuous delivery
+- 🌐 Istio for service mesh and mTLS
+- 🚀 Argo Rollouts for canary deployments
+- 🛡️ Kyverno for policy enforcement
+- 📈 Prometheus-based rollout analysis
+- 🔐 Network policies and zero-trust controls
+
+---
+
+## 🏗️ Architecture
+
+```text
+Git Commit
+    ↓
+ArgoCD
+    ↓
+Kubernetes
+    ├── Istio (mTLS + traffic routing)
+    ├── Kyverno (admission policies)
+    ├── Argo Rollouts (canary deployments)
+    ├── Prometheus (metrics and SLOs)
+    └── Applications (nginx, node-app)
+```
 
 ---
 
 ## 📁 Repository Structure
 
-```
+```text
 platform-gitops/
-├── apps/                    # ArgoCD Application manifests (App of Apps pattern)
-│   ├── istio.yaml           # Deploys Istio config from /istio
-│   ├── nginx.yaml           # Deploys nginx via Helm chart
-│   ├── node-app.yaml        # Deploys node-app (uses Argo Rollouts)
-│   ├── policies.yaml        # Deploys Kyverno policies from /policies
-│   ├── kyverno/
-│   │   └── kyverno.yaml     # Installs Kyverno from Helm chart
-│   └── node-app/
-│       ├── rollout.yaml     # Argo Rollouts canary strategy
-│       └── service.yaml     # Stable + canary services
-│
-├── istio/                   # Istio networking & security config
-│   ├── gateway.yaml         # Ingress gateway (HTTP on port 80)
-│   ├── virtualservice.yaml  # Traffic split: stable vs canary
-│   ├── destinationrule.yaml # Circuit breaker + outlier detection
-│   ├── mtls-strict.yaml     # Enforce mTLS across default namespace
-│   ├── allow-nginx.yaml     # AuthorizationPolicy for nginx
-│   └── allow-node-app.yaml  # AuthorizationPolicy for node-app
-│
-├── nginx-chart/             # Custom Helm chart for nginx (ingress proxy)
-│   ├── Chart.yaml
-│   ├── values.yaml
-│   └── templates/
-│       ├── deployment.yaml
-│       ├── service.yaml
-│       └── httproute.yaml
-│
-├── nginx/                   # Raw nginx manifests (for reference/testing)
-│   ├── deployment.yaml
-│   └── service.yaml
-│
-├── policies/                # Kyverno + Kubernetes NetworkPolicies
-│   ├── require-limits.yaml  # Enforce CPU/memory limits on all workloads
-│   ├── allow-nginx.yaml     # NetworkPolicy: allow ingress/egress for nginx
-│   └── allow-dns.yaml       # NetworkPolicy: allow DNS egress (UDP/TCP 53)
-│
-├── projects/
-│   └── project.yaml         # ArgoCD AppProject: platform-project
-│
-└── rollouts/
-    └── analysis-template.yaml  # Prometheus-based canary success rate check
+├── apps/          # ArgoCD Applications (App-of-Apps)
+├── istio/         # Gateway, VirtualService, DestinationRule
+├── nginx-chart/   # Custom Helm chart
+├── policies/      # Kyverno and NetworkPolicies
+├── projects/      # ArgoCD AppProject
+└── rollouts/      # AnalysisTemplate
 ```
 
 ---
 
-## 🧩 Components
+## 🔄 GitOps Workflow
 
-### ArgoCD — GitOps Engine
-All applications are declared as `Application` CRDs under `apps/` and grouped under the `platform-project` AppProject. ArgoCD watches this repo on `main` and auto-syncs with `prune: true` and `selfHeal: true`.
+```text
+Developer Commit
+      ↓
+Git Repository
+      ↓
+ArgoCD Detects Change
+      ↓
+Auto Sync (self-heal + prune)
+      ↓
+Kubernetes Reconciliation
+      ↓
+Canary Deployment
+      ↓
+Prometheus Validation
+      ↓
+Promote or Rollback
+```
 
-### Istio — Service Mesh
-- **mTLS STRICT** enforced across the `default` namespace
-- **AuthorizationPolicies** allow traffic only from the Istio ingress gateway service account
-- **VirtualService** manages the canary/stable traffic split for `node-app`
-- **DestinationRule** configures connection pooling and outlier detection (circuit breaker)
+---
 
-### Argo Rollouts — Progressive Delivery
-`node-app` uses a **canary deployment strategy** with automated traffic shifting:
+## 🚀 Progressive Delivery
 
-| Step | Canary Weight | Analysis |
-|------|--------------|---------|
-| 1    | 10%          | ✅ Success rate check |
-| 2    | 30%          | ✅ Success rate check |
-| 3    | 60%          | ✅ Success rate check |
-| 4    | 100%         | — |
+Canary rollout progression:
 
-Traffic is routed through Istio's VirtualService. If the success rate drops below **95%**, the rollout is automatically aborted.
+```text
+10% → 30% → 60% → 100%
+```
 
-### Kyverno — Policy Engine
-- `require-resource-limits`: Enforces CPU and memory limits on all `Deployment`, `StatefulSet`, `DaemonSet`, and `Job` workloads (excludes system namespaces)
-- NetworkPolicies restrict ingress/egress for nginx and ensure DNS resolution always works
+If success rate drops below **95%**, the rollout is aborted and traffic is reverted automatically.
+
+---
+
+## 🛡️ Security Controls
+
+| Control | Technology |
+|-------|-------|
+| Mutual TLS | Istio PeerAuthentication |
+| Authorization | Istio AuthorizationPolicy |
+| Resource Governance | Kyverno ClusterPolicy |
+| Network Isolation | Kubernetes NetworkPolicy |
+
+---
+
+## 📊 Observability
+
+Prometheus evaluates rollout health using Istio request metrics.
+
+### Sample PromQL
+
+```promql
+sum(irate(istio_requests_total{response_code!~"5.*"}[1m]))
+/
+sum(irate(istio_requests_total[1m]))
+```
+
+Used by Argo Rollouts to decide whether to continue or rollback.
+
+---
+
+## 🧩 Core Components
+
+| Component | Purpose |
+|--------|--------|
+| ArgoCD | GitOps reconciliation |
+| Istio | Service mesh and traffic control |
+| Argo Rollouts | Progressive delivery |
+| Kyverno | Policy-as-code |
+| Prometheus | Metrics and SLO analysis |
+| NGINX | Reverse proxy |
+| Node App | Sample application |
 
 ---
 
 ## ⚡ Getting Started
 
-### Prerequisites
-
-| Tool | Version |
-|------|---------|
-| Kubernetes | ≥ 1.27 |
-| ArgoCD | ≥ 2.8 |
-| Istio | ≥ 1.18 |
-| Argo Rollouts | ≥ 1.6 |
-| Kyverno | 3.0.0 |
-| Helm | ≥ 3.x |
-
-### 1. Install ArgoCD
+### Install ArgoCD
 
 ```bash
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-### 2. Install Istio
-
-```bash
-istioctl install --set profile=default -y
-kubectl label namespace default istio-injection=enabled
-```
-
-### 3. Install Argo Rollouts
-
-```bash
-kubectl create namespace argo-rollouts
-kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
-```
-
-### 4. Bootstrap the Platform
-
-Apply the ArgoCD AppProject and App-of-Apps:
+### Bootstrap Platform
 
 ```bash
 kubectl apply -f projects/project.yaml
-kubectl apply -f apps/kyverno/kyverno.yaml
 kubectl apply -f apps/
 ```
 
-ArgoCD will now reconcile all other applications automatically.
+ArgoCD will automatically deploy all components.
 
 ---
 
-## 🔁 Canary Deployment Flow
+## 🧠 Enterprise Patterns Demonstrated
 
-```
-New image pushed
-       │
-       ▼
-ArgoCD detects change in rollout.yaml
-       │
-       ▼
-Argo Rollouts starts canary
-       │
-  10% → analysis → 30% → analysis → 60% → analysis → 100%
-       │
-  If success rate < 95% at any step → auto rollback
-```
-
-To manually promote or abort a rollout:
-
-```bash
-# Check rollout status
-kubectl argo rollouts get rollout node-app -n default --watch
-
-# Promote to next step
-kubectl argo rollouts promote node-app -n default
-
-# Abort and rollback
-kubectl argo rollouts abort node-app -n default
-```
+- GitOps architecture
+- App-of-Apps pattern
+- Progressive delivery
+- Zero-trust networking
+- Policy-as-code
+- Automated rollback
+- Production observability
 
 ---
 
-## 🛡️ Security Model
+## 💼 Resume Value
 
-| Control | Implementation |
-|---------|---------------|
-| mTLS | `PeerAuthentication` – STRICT mode in `default` namespace |
-| Authorization | `AuthorizationPolicy` – ingress gateway SA only |
-| Network isolation | `NetworkPolicy` – explicit allow-list for nginx and DNS |
-| Resource governance | Kyverno `ClusterPolicy` – CPU/memory limits required |
+This project demonstrates hands-on experience with:
 
----
-
-## 📊 Observability
-
-The `AnalysisTemplate` in `rollouts/analysis-template.yaml` queries Prometheus for Istio request success rates:
-
-```promql
-sum(irate(istio_requests_total{destination_service=~"node-app.*", response_code!~"5.*"}[1m]))
-/
-sum(irate(istio_requests_total{destination_service=~"node-app.*"}[1m]))
-```
-
-**Success threshold**: ≥ 95%  
-**Evaluated**: every 30s, 3 times per step  
-**Failure tolerance**: up to 10 failures before abort
-
-> ⚠️ Update the Prometheus address in `rollouts/analysis-template.yaml` to point to your actual Prometheus instance before using this in production.
+- Kubernetes platform engineering
+- ArgoCD GitOps
+- Istio service mesh
+- Argo Rollouts
+- Kyverno policy enforcement
+- Prometheus-driven deployment analysis
 
 ---
 
-## 🗂️ ArgoCD Applications Summary
+## 👨‍💻 Author
 
-| Application | Source | Namespace | Sync |
-|-------------|--------|-----------|------|
-| `kyverno` | Helm chart (kyverno.github.io) | `kyverno` | Auto |
-| `istio-config` | `./istio` | `default` | Auto |
-| `nginx-app` | `./nginx-chart` | `default` | Auto |
-| `node-app` | `./apps/node-app` | `default` | Auto |
-| `policies` | `./policies` | `default` | Auto |
-
----
-
-## 🤝 Contributing
-
-1. Fork the repo and create a feature branch
-2. Make changes — ArgoCD will validate via dry-run on PRs
-3. Ensure all workloads declare CPU/memory limits (enforced by Kyverno)
-4. Open a PR targeting `main`
-
----
-
-## 📄 License
-
-MIT
+**Mahesh Naganna**  
+Platform & DevSecOps Engineer • Bengaluru, India
