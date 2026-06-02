@@ -14,6 +14,12 @@ spec:
 
     helm:
       skipCrds: true   # 🔥 DO NOT REMOVE
+      # --- FIX FOR IMAGEPULLBACKOFF INJECTED HERE ---
+      values: |
+        cleanup:
+          image:
+            repository: registry.k8s.io/kubectl
+            tag: v1.26.15
 
   destination:
     server: https://kubernetes.default.svc
