@@ -7,7 +7,8 @@ spec:
   - name: success-rate
     interval: 30s
     count: 3
-    successCondition: len(result) == 0 || result[0] >= 0.95
+    # 🚀 FIX: If length is 0, default to true. Otherwise, check index 0.
+    successCondition: "len(result) > 0 ? result[0] >= 0.95 : true"
     failureLimit: 3
     provider:
       prometheus:
