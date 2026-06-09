@@ -1,0 +1,20 @@
+# This ensures the ApplicationSet CRD is always present
+# Fixes the CrashLoopBackOff you saw today after VM restart
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-crds
+  namespace: argocd
+spec:
+  project: platform-project
+  source:
+    repoURL: https://raw.githubusercontent.com/argoproj/argo-cd
+    targetRevision: HEAD
+    path: manifests/crds
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
