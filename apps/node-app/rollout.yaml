@@ -3,19 +3,15 @@ kind: Rollout
 metadata:
   name: node-app
   namespace: default
-
 spec:
   replicas: 1
-
   selector:
     matchLabels:
       app: node-app
-
   template:
     metadata:
       labels:
-        app: node-app   # ✅ ONLY THIS (IMPORTANT)
-
+        app: node-app
     spec:
       containers:
       - name: node-app
@@ -24,50 +20,40 @@ spec:
           - "-text=Hello from v5 🚀"
         ports:
         - containerPort: 5678
-        # ✅ Added Resource Controls
-        resources:
+        resources:           # ADD THIS
           limits:
             cpu: "100m"
             memory: "64Mi"
           requests:
             cpu: "50m"
             memory: "32Mi"
-
   strategy:
     canary:
       stableService: node-app-stable
       canaryService: node-app-canary
-
-      # 🔥 THIS IS THE REAL FIX
       canaryMetadata:
         labels:
           version: canary
-
       stableMetadata:
         labels:
           version: stable
-
       trafficRouting:
         istio:
           virtualService:
             name: node-app-vs
             routes:
               - primary
-
       steps:
       - setWeight: 10
       - analysis:
           templates:
           - templateName: success-rate-check
-
       - setWeight: 30
       - analysis:
           templates:
           - templateName: success-rate-check
-
       - setWeight: 60
       - analysis:
           templates:
           - templateName: success-rate-check
-
       - setWeight: 100
