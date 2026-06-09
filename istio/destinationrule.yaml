@@ -3,25 +3,20 @@ kind: DestinationRule
 metadata:
   name: node-app-dr
   namespace: default
-
 spec:
   host: node-app.default.svc.cluster.local
-
   subsets:
-    - name: v1
+    - name: stable        # was v1 — WRONG
       labels:
-        version: v1
-
-    - name: v2
+        version: stable   # must match stableMetadata in Rollout
+    - name: canary        # was v2 — WRONG
       labels:
-        version: v2
-
+        version: canary   # must match canaryMetadata in Rollout
   trafficPolicy:
     connectionPool:
       http:
         http1MaxPendingRequests: 1
         maxRequestsPerConnection: 1
-
     outlierDetection:
       consecutive5xxErrors: 1
       interval: 5s
