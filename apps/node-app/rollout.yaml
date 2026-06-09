@@ -24,6 +24,14 @@ spec:
           - "-text=Hello from v5 🚀"
         ports:
         - containerPort: 5678
+        # ✅ Added Resource Controls
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "64Mi"
+          requests:
+            cpu: "50m"
+            memory: "32Mi"
 
   strategy:
     canary:
