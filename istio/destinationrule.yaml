@@ -6,19 +6,19 @@ metadata:
 spec:
   host: node-app.default.svc.cluster.local
   subsets:
-    - name: stable        # was v1 — WRONG
+    - name: stable
       labels:
-        version: stable   # must match stableMetadata in Rollout
-    - name: canary        # was v2 — WRONG
+        version: stable
+    - name: canary
       labels:
-        version: canary   # must match canaryMetadata in Rollout
+        version: canary
   trafficPolicy:
     connectionPool:
       http:
-        http1MaxPendingRequests: 1
-        maxRequestsPerConnection: 1
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 10
     outlierDetection:
-      consecutive5xxErrors: 1
-      interval: 5s
+      consecutive5xxErrors: 5
+      interval: 10s
       baseEjectionTime: 30s
-      maxEjectionPercent: 100
+      maxEjectionPercent: 50
