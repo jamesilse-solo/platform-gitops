@@ -25,6 +25,9 @@ spec:
       kind: Rollout
     - group: argoproj.io
       kind: AnalysisTemplate
+    # ✅ Added AnalysisRun to allow rollouts to execute metrics evaluation
+    - group: argoproj.io
+      kind: AnalysisRun
     - group: networking.istio.io
       kind: Gateway
     - group: networking.istio.io
