@@ -15,11 +15,11 @@ spec:
         address: http://prometheus.istio-system.svc.cluster.local:9090
         query: |
           sum(rate(istio_requests_total{
-            destination_service_name="node-app-canary",
+            destination_service="node-app-canary",
             response_code!~"5.*"
           }[2m]))
           /
           on() group_left()
           (sum(rate(istio_requests_total{
-            destination_service_name="node-app-canary"
+            destination_service="node-app-canary"
           }[2m])) > 0)
