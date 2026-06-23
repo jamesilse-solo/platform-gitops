@@ -8,11 +8,12 @@ spec:
   - name: success-rate
     interval: 30s
     count: 3
-    successCondition: "len(result) > 0 ? result[0] >= 0.95 : true"
+    # If no traffic (NaN), evaluate as true. If traffic exists, require >= 95% success.
+    successCondition: "isNaN(result) || result >= 0.95"
     failureLimit: 3
     provider:
       prometheus:
-        address: http://prometheus.istio-system.svc.cluster.local:9090
+        address: http://cluster.local
         query: |
           sum(rate(istio_requests_total{
             destination_service_name="node-app-canary",
