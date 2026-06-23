@@ -8,10 +8,12 @@ spec:
   selector:
     matchLabels:
       app: node-app
+      version: stable
   template:
     metadata:
       labels:
         app: node-app
+        version: stable
     spec:
       containers:
       - name: node-app
