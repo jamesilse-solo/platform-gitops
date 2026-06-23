@@ -8,9 +8,6 @@ spec:
   - name: success-rate
     interval: 30s
     count: 3
-    # 1. len(result) == 0  -> Safe if there is no traffic at all (empty prometheus array)
-    # 2. isNaN(result[0])   -> Safe if traffic is 0/0 (Prometheus returns NaN)
-    # 3. result[0] >= 0.95 -> Evaluates the actual value correctly as a float64
     successCondition: "len(result) == 0 || isNaN(result[0]) || result[0] >= 0.95"
     failureLimit: 3
     provider:
@@ -22,6 +19,7 @@ spec:
             response_code!~"5.*"
           }[2m]))
           /
-          sum(rate(istio_requests_total{
+          on() group_left()
+          (sum(rate(istio_requests_total{
             destination_service_name="node-app-canary"
-          }[2m]))
+          }[2m])) > 0)
