@@ -8,7 +8,6 @@ spec:
   selector:
     matchLabels:
       app: node-app
-      version: stable
   template:
     metadata:
       labels:
