@@ -6,7 +6,6 @@ metadata:
 spec:
   selector:
     app: node-app
-    version: stable
   ports:
   - port: 80
     targetPort: 5678
@@ -20,7 +19,6 @@ metadata:
 spec:
   selector:
     app: node-app
-    version: canary
   ports:
   - port: 80
     targetPort: 5678
