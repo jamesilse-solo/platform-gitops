@@ -29,7 +29,7 @@ Every component in the cluster is declared in Git. ArgoCD watches that repo and 
 
 ## Platform flow
 
-![Platform GitOps Architecture](docs/platform-gitops-infra.png)
+![Platform GitOps Architecture](docs/platform-gitops.png)
 
 ```
 Git commit (main)
