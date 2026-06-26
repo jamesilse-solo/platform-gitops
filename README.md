@@ -13,7 +13,7 @@
 
 *Git as the single source of truth for secure, progressive, self-healing Kubernetes delivery*
 
-**[Mahesh Naganna](https://github.com/maheshnaganna1994-lang)** · Platform & DevSecOps Engineer · Bengaluru, India
+![Platform GitOps Flow](docs/platform-gitops-flow.gif)
 
 </div>
 
@@ -28,6 +28,8 @@ Every component in the cluster is declared in Git. ArgoCD watches that repo and 
 ---
 
 ## Platform flow
+
+![Platform GitOps Architecture](docs/platform-gitops-infra.png)
 
 ```
 Git commit (main)
@@ -190,6 +192,9 @@ platform-gitops/
 │   └── recover.sh             # Recovery helper script
 │
 └── docs/
+    ├── platform-gitops-flow.gif    # Animated platform flow
+    ├── platform-gitops-flow.png    # Static platform flow
+    ├── platform-gitops-infra.png   # Node-graph architecture diagram
     ├── architecture.md
     ├── canary-deployment.md
     └── troubleshooting.md
@@ -282,8 +287,16 @@ Grafana dashboards can be pointed at the same Prometheus instance to visualise:
 
 ---
 
-## Author
+## Maintainer
 
-**Mahesh Naganna**  
-Platform & DevSecOps Engineer · Bengaluru, India  
-[github.com/maheshnaganna1994-lang](https://github.com/maheshnaganna1994-lang)
+**Mahesh Naganna** — Lead Platform & DevSecOps Engineer
+
+[![GitHub](https://img.shields.io/badge/GitHub-maheshnaganna1994--lang-181717?style=flat-square&logo=github)](https://github.com/maheshnaganna1994-lang)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-mahesh--naganna-0A66C2?style=flat-square&logo=linkedin)](https://linkedin.com/in/mahesh-naganna)
+
+---
+
+<div align="center">
+<sub>This repo: GitOps delivery platform · ArgoCD · Istio · Kyverno · Argo Rollouts · Prometheus.<br>
+Application source and CI pipeline lives in <a href="https://github.com/maheshnaganna1994-lang/atlas-aegis-backend">atlas-aegis-backend</a>.</sub>
+</div>
