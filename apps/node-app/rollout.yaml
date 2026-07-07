@@ -18,7 +18,7 @@ spec:
       - name: node-app
         image: hashicorp/http-echo
         args:
-          - "-text=Hello from v6 🚀"
+          - "-text=Hello from v7 🌟 (canary)"
         ports:
         - containerPort: 5678
         resources:           # ADD THIS
