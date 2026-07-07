@@ -1,15 +1,16 @@
-apiVersion: security.istio.io/v1beta1
+apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
   name: allow-nginx-only-ingress
   namespace: default
 spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: nginx-chart
+  targetRefs:
+    - group: ""
+      kind: Service
+      name: nginx-app-nginx-chart
   action: ALLOW
   rules:
     - from:
         - source:
             principals:
-              - cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account
+              - cluster.local/ns/agentgateway-system/sa/agentgateway
