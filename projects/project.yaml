@@ -25,31 +25,9 @@ spec:
       server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
-    - group: argoproj.io
-      kind: Rollout
-    - group: argoproj.io
-      kind: AnalysisTemplate
-    - group: argoproj.io
-      kind: AnalysisRun
-    # Ambient mesh policy (waypoint deploys via Gateway API)
-    - group: security.istio.io
-      kind: AuthorizationPolicy
-    - group: security.istio.io
-      kind: PeerAuthentication
-    # Gateway API — used by both AgentGateway (north-south) and the ambient waypoint (east-west L7)
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-    - group: gateway.networking.k8s.io
-      kind: GatewayClass
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-    - group: gateway.networking.k8s.io
-      kind: ReferenceGrant
-    - group: kyverno.io
-      kind: ClusterPolicy
-    - group: networking.k8s.io
-      kind: NetworkPolicy
-    - group: apiextensions.k8s.io
-      kind: CustomResourceDefinition
-    - group: ''
-      kind: Namespace
+    # Wide open at the cluster scope — this is a demo project and Kyverno,
+    # Argo Rollouts, and Istio Ambient all bring in their own RBAC, webhook,
+    # and APIService cluster-scoped resources. Narrow the destinations
+    # (see above) if you need to constrain blast radius.
+    - group: '*'
+      kind: '*'
