@@ -39,11 +39,10 @@ spec:
         labels:
           version: stable
       trafficRouting:
-        istio:
-          virtualService:
-            name: node-app-vs
-            routes:
-              - primary
+        plugins:
+          argoproj-labs/gatewayAPI:
+            httpRoute: node-app-route
+            namespace: default
       steps:
       - setWeight: 10
       - analysis:

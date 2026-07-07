@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: git@github.com:maheshnaganna1994-lang/platform-gitops.git
     path: policies
-    targetRevision: main
+    targetRevision: ambient-agentgateway
   destination:
     server: https://kubernetes.default.svc
     namespace: default

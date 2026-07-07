@@ -4,7 +4,7 @@ metadata:
   name: platform-project
   namespace: argocd
 spec:
-  description: Platform GitOps Project — manages nginx, node-app, Istio config, and Kyverno policies
+  description: Platform GitOps Project — manages nginx, node-app, Ambient config, AgentGateway config, and Kyverno policies
 
   sourceRepos:
     - git@github.com:maheshnaganna1994-lang/platform-gitops.git
@@ -19,25 +19,32 @@ spec:
       server: https://kubernetes.default.svc
     - namespace: argo-rollouts
       server: https://kubernetes.default.svc
+    - namespace: agentgateway-system
+      server: https://kubernetes.default.svc
+    - namespace: istio-system
+      server: https://kubernetes.default.svc
 
   clusterResourceWhitelist:
     - group: argoproj.io
       kind: Rollout
     - group: argoproj.io
       kind: AnalysisTemplate
-    # ✅ Added AnalysisRun to allow rollouts to execute metrics evaluation
     - group: argoproj.io
       kind: AnalysisRun
-    - group: networking.istio.io
-      kind: Gateway
-    - group: networking.istio.io
-      kind: VirtualService
-    - group: networking.istio.io
-      kind: DestinationRule
+    # Ambient mesh policy (waypoint deploys via Gateway API)
     - group: security.istio.io
       kind: AuthorizationPolicy
     - group: security.istio.io
       kind: PeerAuthentication
+    # Gateway API — used by both AgentGateway (north-south) and the ambient waypoint (east-west L7)
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+    - group: gateway.networking.k8s.io
+      kind: GatewayClass
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: gateway.networking.k8s.io
+      kind: ReferenceGrant
     - group: kyverno.io
       kind: ClusterPolicy
     - group: networking.k8s.io

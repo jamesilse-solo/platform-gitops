@@ -31,12 +31,10 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: "nginx-app-nginx-chart"
 
-# This is for setting Kubernetes Annotations to a Pod.
-# For more information checkout: https://kubernetes.io
-podAnnotations:
-  sidecar.istio.io/inject: "true"
-# This is for setting Kubernetes Labels to a Pod.
-# For more information checkout: https://kubernetes.io
+# In ambient mode the ztunnel captures traffic at the node level — no sidecar
+# injection required. The namespace label `istio.io/dataplane-mode: ambient`
+# (see ambient/namespace.yaml) is what opts this workload into the mesh.
+podAnnotations: {}
 podLabels: {}
 
 podSecurityContext: {}
@@ -77,22 +75,21 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-# -- Expose the service via gateway-api HTTPRoute
-# Requires Gateway API resources and suitable controller installed within the cluster
-# (see: https://k8s.io)
+# Expose the service via Gateway API HTTPRoute attached to the AgentGateway
+# `platform-gateway` (see agentgateway/gateway.yaml).
 httpRoute:
-  enabled: false
+  enabled: true
   annotations: {}
   parentRefs:
-  - name: gateway
-    sectionName: http
+    - name: platform-gateway
+      sectionName: http
   hostnames:
-  - chart-example.local
+    - "*"
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /headers
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /headers
 
 resources:
   limits:

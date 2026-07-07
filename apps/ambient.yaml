@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: istio-config
+  name: ambient-config
   namespace: argocd
 spec:
   project: platform-project
   source:
     repoURL: git@github.com:maheshnaganna1994-lang/platform-gitops.git
-    targetRevision: main
-    path: istio
+    targetRevision: ambient-agentgateway
+    path: ambient
   destination:
     server: https://kubernetes.default.svc
     namespace: default

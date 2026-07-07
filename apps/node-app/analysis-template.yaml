@@ -13,13 +13,19 @@ spec:
     provider:
       prometheus:
         address: http://prometheus.istio-system.svc.cluster.local:9090
+        # `istio_requests_total` is emitted by the ambient waypoint proxy
+        # (see ambient/waypoint.yaml). Without a waypoint on the default
+        # namespace, the ztunnel would only emit L4 metrics and this query
+        # would return no results.
         query: |
           sum(rate(istio_requests_total{
+            reporter="waypoint",
             destination_service="node-app-canary.default.svc.cluster.local",
             response_code!~"5.*"
           }[2m]))
           /
           on() group_left()
           (sum(rate(istio_requests_total{
+            reporter="waypoint",
             destination_service="node-app-canary.default.svc.cluster.local"
           }[2m])) > 0)
