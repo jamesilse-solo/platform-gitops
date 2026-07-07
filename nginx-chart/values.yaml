@@ -83,8 +83,7 @@ httpRoute:
   parentRefs:
     - name: platform-gateway
       sectionName: http
-  hostnames:
-    - "*"
+  hostnames: []
   rules:
     - matches:
         - path:

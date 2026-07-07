@@ -7,8 +7,6 @@ spec:
   parentRefs:
     - name: platform-gateway
       sectionName: http
-  hostnames:
-    - "*"
   rules:
     - name: primary
       backendRefs:
