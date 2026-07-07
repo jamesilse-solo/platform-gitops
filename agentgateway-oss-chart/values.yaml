@@ -1,0 +1,116 @@
+# Default values for agentgateway-oss-chart.
+# Deploys the open-source agentgateway (https://agentgateway.dev) as an
+# in-cluster workload, fronted by the north-south AgentGateway ingress.
+
+replicaCount: 2
+
+image:
+  repository: cr.agentgateway.dev/agentgateway
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  # Name is generated from `<Release.Name>-<Chart.Name>` when unset;
+  # pin it here so the AuthorizationPolicy principal is stable.
+  name: "agentgateway-oss-agentgateway-oss-chart"
+
+# In ambient mode the ztunnel captures traffic at the node level — no sidecar
+# injection required. The namespace label `istio.io/dataplane-mode: ambient`
+# (see ambient/namespace.yaml) is what opts this workload into the mesh.
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  # Container listener port (matches `binds[].port` in agentgateway.config below).
+  port: 3000
+  name: http
+
+# Ingress via Kubernetes Ingress resource — disabled; we expose via Gateway API HTTPRoute instead.
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+# Expose the service via Gateway API HTTPRoute attached to the AgentGateway
+# `platform-gateway` (see agentgateway/gateway.yaml).
+httpRoute:
+  enabled: true
+  annotations: {}
+  parentRefs:
+    - name: platform-gateway
+      sectionName: http
+  hostnames: []
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /oss
+
+# Agentgateway runtime config, rendered into a ConfigMap and mounted at
+# /etc/agentgateway/config.yaml. Schema: https://agentgateway.dev/schema/config
+# Minimal config: listen on :3000, proxy /* to the node-app stable Service.
+agentgateway:
+  config:
+    binds:
+      - port: 3000
+        listeners:
+          - protocol: HTTP
+            routes:
+              - name: node-app-passthrough
+                matches:
+                  - path:
+                      pathPrefix: /
+                backends:
+                  - host: node-app-stable.default.svc.cluster.local:80
+
+resources:
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+
+# agentgateway serves its admin endpoint on :15021 by default; probe TCP on the
+# proxy listener port since we always have one configured.
+livenessProbe:
+  tcpSocket:
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+readinessProbe:
+  tcpSocket:
+    port: 3000
+  initialDelaySeconds: 2
+  periodSeconds: 5
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes: []
+volumeMounts: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

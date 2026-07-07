@@ -16,4 +16,7 @@ spec:
     - from:
         - source:
             principals:
+              # north-south ingress (Solo Enterprise AgentGateway)
               - cluster.local/ns/agentgateway-system/sa/agentgateway
+              # OSS agentgateway workload — proxies /oss/* → node-app-stable
+              - cluster.local/ns/default/sa/agentgateway-oss-agentgateway-oss-chart

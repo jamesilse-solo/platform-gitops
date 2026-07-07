@@ -1,0 +1,10 @@
+apiVersion: v2
+name: agentgateway-oss-chart
+description: Open-source Agentgateway (agentgateway.dev) deployed as an in-cluster workload
+
+type: application
+
+version: 0.1.0
+
+# Upstream release: https://github.com/agentgateway/agentgateway/releases
+appVersion: "v1.3.1"

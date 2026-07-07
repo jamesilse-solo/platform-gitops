@@ -1,13 +1,13 @@
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-nginx-only-ingress
+  name: allow-agentgateway-oss
   namespace: default
 spec:
   targetRefs:
     - group: ""
       kind: Service
-      name: nginx-app-nginx-chart
+      name: agentgateway-oss-agentgateway-oss-chart
   action: ALLOW
   rules:
     - from:

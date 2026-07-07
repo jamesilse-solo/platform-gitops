@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "agentgateway-oss-chart.fullname" . }}-config
+  labels:
+    {{- include "agentgateway-oss-chart.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+{{ toYaml .Values.agentgateway.config | indent 4 }}

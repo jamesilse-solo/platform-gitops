@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "nginx-chart.fullname" . }}
+  name: {{ include "agentgateway-oss-chart.fullname" . }}
   labels:
-    {{- include "nginx-chart.labels" . | nindent 4 }}
+    {{- include "agentgateway-oss-chart.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "nginx-chart.selectorLabels" . | nindent 4 }}
+    {{- include "agentgateway-oss-chart.selectorLabels" . | nindent 4 }}

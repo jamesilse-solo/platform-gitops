@@ -50,7 +50,7 @@ ArgoCD ── reconciles 6 applications
         ├──▶ ambient-config     (path: ambient/)     — waypoint, PeerAuth, AuthzPolicies
         ├──▶ agentgateway-config (path: agentgateway/) — Gateway, HTTPRoute
         ├──▶ kyverno            (Helm 3.0.0)
-        ├──▶ nginx-app          (Helm chart)
+        ├──▶ agentgateway-oss   (Helm chart — OSS agentgateway workload)
         ├──▶ node-app           (Argo Rollout)
         └──▶ policies           (Kyverno + NetworkPolicy)
                 │
@@ -92,7 +92,7 @@ platform-gitops/
 │   ├── namespace.yaml            ← labels default ns with dataplane-mode: ambient
 │   ├── waypoint.yaml             ← namespace waypoint (Gateway API, class: istio-waypoint)
 │   ├── mtls-strict.yaml          ← unchanged (still PeerAuthentication STRICT)
-│   ├── allow-nginx.yaml          ← AuthorizationPolicy targetRef → Service; principal → agentgateway SA
+│   ├── allow-agentgateway-oss.yaml ← AuthorizationPolicy targetRef → Service; principal → ingress AgentGateway SA
 │   └── allow-node-app.yaml       ← same shape, targets node-app services
 │
 ├── agentgateway/                # NEW — north-south ingress
@@ -103,7 +103,7 @@ platform-gitops/
 │   ├── ambient.yaml              ← (was istio.yaml) — Argo Application pointing at ambient/
 │   ├── agentgateway.yaml         ← NEW — Argo Application pointing at agentgateway/
 │   ├── kyverno/kyverno.yaml      ← unchanged
-│   ├── nginx.yaml                ← unchanged (chart pinned to this branch)
+│   ├── agentgateway-oss.yaml     ← Argo Application for OSS agentgateway workload
 │   ├── node-app.yaml             ← unchanged (path pinned to this branch)
 │   ├── node-app/
 │   │   ├── rollout.yaml          ← trafficRouting: argoproj-labs/gatewayAPI plugin
@@ -111,9 +111,15 @@ platform-gitops/
 │   │   └── analysis-template.yaml ← query pins reporter="waypoint"
 │   └── policies.yaml             ← unchanged
 │
-├── nginx-chart/
-│   ├── values.yaml               ← removed sidecar.istio.io/inject; httpRoute.enabled: true
-│   └── templates/httproute.yaml  ← unchanged (values now point parentRef at platform-gateway)
+├── agentgateway-oss-chart/       # (was nginx-chart/) — OSS agentgateway as a workload
+│   ├── Chart.yaml                ← appVersion pinned to upstream agentgateway v1.3.1
+│   ├── values.yaml               ← image cr.agentgateway.dev/agentgateway; embedded config
+│   └── templates/
+│       ├── configmap.yaml        ← NEW — renders values.agentgateway.config into /etc/agentgateway/config.yaml
+│       ├── serviceaccount.yaml   ← moved under templates/ (was a latent bug: SA never got created)
+│       ├── deployment.yaml       ← mounts config ConfigMap, args -f /etc/agentgateway/config.yaml
+│       ├── service.yaml          ← ClusterIP :3000
+│       └── httproute.yaml        ← parentRef platform-gateway, path prefix /oss
 │
 ├── policies/                     ← unchanged
 ├── projects/project.yaml         ← whitelist swapped: gateway.networking.k8s.io kinds added,
@@ -194,7 +200,17 @@ Services already do the job. The connection-pool and outlier-detection
 settings from the old DR can be reintroduced via an ambient
 [waypoint-scoped `DestinationRule`](https://istio.io/latest/docs/ambient/usage/waypoint/#configure-a-waypoint) if you need them.
 
-**Sidecar annotation removed.** `nginx-chart/values.yaml` no longer sets
+**nginx replaced with OSS agentgateway.** The generic web-server workload
+that lived in `nginx-chart/` is now `agentgateway-oss-chart/`, deploying
+the upstream open-source [agentgateway](https://agentgateway.dev)
+(`cr.agentgateway.dev/agentgateway:v1.3.1`) as an in-cluster reverse
+proxy. Its config lives in a ConfigMap generated from
+`values.agentgateway.config` and is mounted at
+`/etc/agentgateway/config.yaml`. The chart's HTTPRoute attaches to the
+same `platform-gateway` Gateway at `pathPrefix: /oss` so it doesn't
+shadow the node-app canary route.
+
+**Sidecar annotation removed.** `agentgateway-oss-chart/values.yaml` no longer sets
 `sidecar.istio.io/inject: "true"`; ambient enrolment is namespace-level.
 
 ---
