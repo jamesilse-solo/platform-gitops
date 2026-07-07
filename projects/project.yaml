@@ -7,7 +7,7 @@ spec:
   description: Platform GitOps Project — manages nginx, node-app, Ambient config, AgentGateway config, and Kyverno policies
 
   sourceRepos:
-    - git@github.com:maheshnaganna1994-lang/platform-gitops.git
+    - https://github.com/jamesilse-solo/platform-gitops.git
     - https://kyverno.github.io/kyverno/
 
   destinations:

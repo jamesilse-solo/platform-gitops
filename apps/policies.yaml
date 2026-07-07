@@ -6,7 +6,7 @@ metadata:
 spec:
   project: platform-project
   source:
-    repoURL: git@github.com:maheshnaganna1994-lang/platform-gitops.git
+    repoURL: https://github.com/jamesilse-solo/platform-gitops.git
     path: policies
     targetRevision: ambient-agentgateway
   destination:
