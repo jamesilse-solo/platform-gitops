@@ -182,6 +182,231 @@ kubectl --context=<ctx> logs -n default -l gateway.networking.k8s.io/gateway-nam
 
 ---
 
+## Zero-trust posture
+
+The branch preserves every zero-trust control from `main`, just enforced by
+different data-plane components:
+
+| Control | `main` (sidecar) | `ambient-agentgateway` |
+|---|---|---|
+| mTLS between workloads | Sidecar Envoy handshake | ztunnel HBONE tunnel (mTLS wrapping every connection) |
+| `PeerAuthentication: STRICT` | Sidecar rejects plaintext | ztunnel rejects plaintext at L4 — same CR, different enforcement point |
+| Workload identity | SPIFFE issued to sidecar | SPIFFE issued to ztunnel per-pod, seeded into HBONE mTLS certs |
+| Authorization | Sidecar RBAC filter | Waypoint Envoy RBAC filter (uses `io.istio.peer_principal` extracted from HBONE cert) |
+| Default posture | Deny-all, explicit `AuthorizationPolicy` ALLOW | Same — `ambient/allow-*.yaml` files with `targetRefs: Service` |
+
+**Nothing was traded away.** The waypoint runs an Envoy that terminates HBONE,
+extracts the peer SPIFFE ID from the mTLS cert into a filter-state key
+(`io.istio.peer_principal`), and evaluates `AuthorizationPolicy` against it —
+same RBAC filter you'd find in a sidecar, just moved to a shared L7 hop.
+
+---
+
+## Verifying zero-trust with `istioctl`
+
+All commands below use OSS `istioctl` (1.29). Solo's `istioctl` builds accept the
+same subcommands. Assume `CTX=gke-ambient4-jilse` for the examples.
+
+### 1. Every mesh pod has a SPIFFE identity via ztunnel
+
+```bash
+istioctl --context=$CTX ztunnel-config workloads
+# NAMESPACE  POD NAME                                                 ...  PROTOCOL
+# default    agentgateway-oss-agentgateway-oss-chart-58c48c9c74-l6bkr ...  HBONE
+# default    node-app-5cdf79789f-9n29v                                ...  HBONE
+# default    waypoint-54bf765c5b-l4hjm                                ...  TCP
+```
+
+Pods showing `PROTOCOL: HBONE` are mesh-enrolled — ztunnel is intercepting all
+inbound traffic and requiring mTLS. Pods marked `TCP` are outside the mesh.
+
+### 2. Confirm STRICT mTLS is programmed globally
+
+```bash
+istioctl --context=$CTX ztunnel-config policies
+# NAMESPACE    POLICY NAME                   ACTION SCOPE
+# istio-system istio_converted_static_strict Deny   WorkloadSelector
+```
+
+The `istio_converted_static_strict` entry is what the `PeerAuthentication:
+STRICT` in `ambient/mtls-strict.yaml` compiles into at ztunnel. Any plaintext
+connection to a mesh pod is dropped before it reaches the workload.
+
+### 3. Inspect the compiled RBAC on the waypoint
+
+```bash
+WAYPOD=$(kubectl --context=$CTX -n default get pod \
+  -l gateway.networking.k8s.io/gateway-name=waypoint \
+  -o jsonpath='{.items[0].metadata.name}')
+
+kubectl --context=$CTX -n default exec $WAYPOD -c istio-proxy -- \
+  pilot-agent request GET /config_dump \
+  | jq -r '[.configs[] | select(.["@type"]|test("Listeners"))] | .[0].dynamic_listeners[]
+           | .active_state.listener.filter_chains[].filters[]
+           | select(.name=="envoy.filters.network.http_connection_manager")
+           | .typed_config.http_filters[] | select(.name=="envoy.filters.http.rbac")
+           | .typed_config.rules.policies | keys'
+# [ "ns[default]-policy[allow-node-app]-rule[0]" ]
+# [ "ns[default]-policy[allow-agentgateway-oss]-rule[0]" ]
+```
+
+Each `AuthorizationPolicy` in `ambient/` shows up here as an RBAC policy on
+the waypoint's Envoy. If it's missing, the policy isn't enforcing.
+
+### 4. Prove default-deny with a rogue pod
+
+```bash
+kubectl --context=$CTX -n default apply -f - <<'EOF'
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: rogue, namespace: default}
+---
+apiVersion: v1
+kind: Pod
+metadata: {name: rogue-client, namespace: default}
+spec:
+  serviceAccountName: rogue    # NOT in any allow-list
+  containers:
+    - name: c
+      image: curlimages/curl:8.10.1
+      command: [sleep, infinity]
+EOF
+
+kubectl --context=$CTX -n default exec rogue-client -- \
+  curl -sS -o /dev/null -w 'HTTP %{http_code}\n' -m 5 \
+  http://node-app-stable.default.svc.cluster.local/
+# HTTP 403
+
+kubectl --context=$CTX -n default delete pod/rogue-client sa/rogue
+```
+
+The rogue pod is inside the mesh (ambient-enrolled by the namespace label),
+gets its own SPIFFE identity `spiffe://cluster.local/ns/default/sa/rogue`,
+and completes the mTLS handshake — but the waypoint's RBAC filter refuses
+because that SPIFFE ID isn't in `allow-node-app`'s principal list. Result:
+`HTTP 403`.
+
+### 5. Verify from waypoint metrics that mTLS and RBAC are both live
+
+The waypoint emits `istio_requests_total` with the source SPIFFE identity, the
+response code, and the connection security policy. Query Prometheus:
+
+```
+istio_requests_total{
+  reporter="waypoint",
+  destination_service="node-app-stable.default.svc.cluster.local"
+}
+```
+
+Expected shape:
+
+```
+# Authorized:   200 + mTLS
+source_principal="spiffe://cluster.local/ns/default/sa/agentgateway-oss-agentgateway-oss-chart"
+response_code="200"  connection_security_policy="mutual_tls"
+
+# Unauthorized: 403 + mTLS (identity is verified before authorization runs)
+source_principal="spiffe://cluster.local/ns/default/sa/rogue"
+response_code="403"  connection_security_policy="mutual_tls"
+```
+
+The `403 + mutual_tls` row is the exact signature of a zero-trust denial: the
+peer authenticated cryptographically, then got refused on identity — no
+network path, IP filter, or NetworkPolicy involved.
+
+### 6. Other useful commands
+
+```bash
+istioctl --context=$CTX x describe pod <pod> -n default    # what config applies to a pod
+istioctl --context=$CTX proxy-config all $WAYPOD.default   # entire Envoy config on the waypoint
+istioctl --context=$CTX analyze -n default                 # mesh config sanity check
+```
+
+---
+
+## Optional: running without a waypoint (L4-only zero-trust)
+
+The waypoint is the L7 policy + telemetry hop. If you don't need HTTP-level
+authorization (`paths`, `methods`, headers) or `istio_requests_total`
+metrics, you can drop it — the ztunnel keeps enforcing mTLS + L4 authz on
+its own.
+
+### What you get without a waypoint
+
+| Control | Without waypoint | Notes |
+|---|---|---|
+| mTLS STRICT | ✅ ztunnel enforces | `PeerAuthentication` still works |
+| L4 authz (source principal, source ns, ports) | ✅ ztunnel enforces | `AuthorizationPolicy` without `to.operation.paths` |
+| L7 authz (paths, methods, headers) | ❌ silently ignored | Needs a waypoint to evaluate |
+| `istio_requests_total` per-service | ❌ | Only L4 byte counters emit from ztunnel |
+| `AnalysisTemplate` Prometheus canary gate | ❌ won't work as-is | Depends on `istio_requests_total` |
+
+### How to disable the waypoint
+
+1. Drop the namespace opt-in label:
+
+   ```yaml
+   # ambient/namespace.yaml
+   apiVersion: v1
+   kind: Namespace
+   metadata:
+     name: default
+     labels:
+       istio.io/dataplane-mode: ambient
+       # istio.io/use-waypoint: waypoint   ← comment out or delete
+   ```
+
+2. Delete `ambient/waypoint.yaml` from the branch. The `waypoint` Gateway
+   resource stops being reconciled and its Deployment is pruned by ArgoCD.
+
+3. Simplify each `AuthorizationPolicy` to L4-only rules — anything under
+   `rules[].to.operation.paths` / `methods` / `hosts` is dropped by ztunnel:
+
+   ```yaml
+   # ambient/allow-node-app.yaml (L4-only variant)
+   spec:
+     targetRefs:                # ztunnel does support Service targetRefs
+       - group: ""
+         kind: Service
+         name: node-app-stable
+     action: ALLOW
+     rules:
+       - from:
+           - source:
+               principals:
+                 - cluster.local/ns/agentgateway-system/sa/agentgateway
+                 - cluster.local/ns/default/sa/agentgateway-oss-agentgateway-oss-chart
+         # no `to.operation.*` fields
+   ```
+
+4. Repoint the canary `AnalysisTemplate` at an alternate metric source. The
+   AgentGateway ingress and the OSS agentgateway workload both emit
+   Prometheus counters on their own — `agentgateway_http_requests_total`
+   or the Prometheus scrape configured under `podAnnotations` — which
+   work regardless of waypoint presence.
+
+### Selective waypointing (middle ground)
+
+If you want L7 policy for only a subset of workloads, drop the
+namespace-scoped label and instead label individual Services or Pods:
+
+```yaml
+# on the Service you want L7-policed
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-app-stable
+  namespace: default
+  labels:
+    istio.io/use-waypoint: waypoint
+```
+
+Everything else in the namespace runs ztunnel-only. `istioctl ztunnel-config
+workloads` will show a `WAYPOINT` column pointing at `waypoint` for the
+opted-in services and `None` for the rest.
+
+---
+
 ## Notes on the swap
 
 **AuthorizationPolicy principal.** The allow-list source is now
